@@ -1,4 +1,4 @@
-module eventStore
+module github.com/roava/eventStore
 
 go 1.14
 

@@ -1,8 +1,8 @@
 package pulse
 
 import (
-	"eventStore"
 	"github.com/apache/pulsar-client-go/pulsar"
+	"github.com/roava/eventStore"
 )
 
 type event struct {

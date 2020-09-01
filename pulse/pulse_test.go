@@ -1,7 +1,7 @@
 package pulse
 
 import (
-	"eventStore"
+	"github.com/roava/eventStore"
 	"testing"
 	"time"
 )
