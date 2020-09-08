@@ -2,42 +2,44 @@ package pulse
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/apache/pulsar-client-go/pulsar"
-	"github.com/roava/eventStore"
+	"github.com/roava/bifrost"
 	"log"
+	"strings"
 	"time"
 )
 
 type pulsarStore struct {
 	serviceName string
 	client      pulsar.Client
-	opts        eventStore.Options
+	opts        bifrost.Options
 }
 
-func Init(opts eventStore.Options) (eventStore.EventStore, error) {
-	if opts.Secure && opts.TLSConfig == nil {
-		return nil, errors.New("secure connection must have valid tls configuration")
+// Note: If you need a more controlled init func, write your pulsar lib to implement the EventStore interface.
+func Init(opts bifrost.Options) (bifrost.EventStore, error) {
+	if strings.TrimSpace(opts.ServiceName) == "" {
+		return nil, bifrost.EmptyStoreNameErr
 	}
 
-	p, err := pulsar.NewClient(pulsar.ClientOptions{
-		URL: opts.Address,
-		//Authentication:,
-	})
+	clientOptions := pulsar.ClientOptions{URL: opts.Address}
 
+	if opts.TLSCertificate != nil {
+		clientOptions.Authentication = pulsar.NewAuthenticationFromTLSCertSupplier(func() (*tls.Certificate, error) {
+			// TODO: Really test connecting via Certificates & TLS conf.
+			return opts.TLSCertificate, nil
+		})
+	}
+
+	p, err := pulsar.NewClient(clientOptions)
 	if err != nil {
-		log.Print("Unable to connect with Pulsar secrets. Failed with error: ", err)
+		log.Print("Unable to connect with Pulsar with provided configuration. Failed with error: ", err)
 		return nil, err
 	}
-
-	return &pulsarStore{client: p}, nil
-}
-
-func (s *pulsarStore) SetServiceName(name string) {
-	s.serviceName = name
+	return &pulsarStore{client: p, serviceName: opts.ServiceName}, nil
 }
 
 func (s *pulsarStore) GetServiceName() string {
@@ -56,6 +58,9 @@ func (s *pulsarStore) Publish(topic string, message []byte) error {
 		log.Println("Failed to create new producer with the following error", err)
 		return err
 	}
+	// Always close producer after successful production of packets so as not to get the error of
+	// ProducerBusy from pulsar.
+	defer producer.Close()
 
 	id, e := producer.Send(context.Background(), &pulsar.ProducerMessage{
 		Payload:   message,
@@ -72,7 +77,7 @@ func (s *pulsarStore) Publish(topic string, message []byte) error {
 }
 
 // Manually put the fqdn of your topics.
-func (s *pulsarStore) Subscribe(topic string, handler eventStore.SubscriptionHandler) error {
+func (s *pulsarStore) Subscribe(topic string, handler bifrost.SubscriptionHandler) error {
 	serviceName := s.GetServiceName()
 	consumer, err := s.client.Subscribe(pulsar.ConsumerOptions{
 		Topic:                       topic,

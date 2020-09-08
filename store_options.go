@@ -1,13 +1,11 @@
-package eventStore
+package bifrost
 
 import (
-	"context"
 	"crypto/tls"
 )
 
 type Options struct {
+	ServiceName string
 	Address   string
-	Secure    bool
-	TLSConfig *tls.Config
-	Context   context.Context
+	TLSCertificate *tls.Certificate
 }

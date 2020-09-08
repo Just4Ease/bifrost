@@ -2,14 +2,14 @@ package pulse
 
 import (
 	"github.com/apache/pulsar-client-go/pulsar"
-	"github.com/roava/eventStore"
+	"github.com/roava/bifrost"
 )
 
 type event struct {
 	raw *pulsar.ConsumerMessage
 }
 
-func NewEvent(message pulsar.ConsumerMessage) eventStore.Event {
+func NewEvent(message pulsar.ConsumerMessage) bifrost.Event {
 	return &event{raw: &message}
 }
 

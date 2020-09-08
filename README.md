@@ -1,4 +1,4 @@
-# eventStore
+# bifrost
  
 ## How to use 
 
@@ -6,8 +6,8 @@
 package main
 
 import (
- "github.com/roava/eventStore"
- "github.com/roava/eventStore/pulse"
+ "github.com/roava/bifrost"
+ "github.com/roava/bifrost/pulse"
  "log"
  "time"
 )
@@ -15,17 +15,17 @@ import (
 func main() {
 	
     var topic = "test-topic" // for random topic name.
-    var store, _ = pulse.Init(eventStore.Options{
+    var store, _ = pulse.Init(bifrost.Options{
+        ServiceName: "test-event-store",
 	    Address: "pulsar://localhost:6650",
     })
-	store.SetServiceName("test-service")
-
+	
 	if err := store.Publish(topic, []byte("Hello World!")); err != nil {
 		log.Fatalf("Could not publish message to %s", topic)
 	}
 
 	timer := time.AfterFunc(3*time.Second, func() {
-		if err := store.Subscribe(topic, func(event eventStore.Event) {
+		if err := store.Subscribe(topic, func(event bifrost.Event) {
 			data := event.Data()
 
 			eventTopic := event.Topic()

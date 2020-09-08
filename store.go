@@ -1,10 +1,15 @@
-package eventStore
+package bifrost
+
+import "github.com/pkg/errors"
 
 type SubscriptionHandler func(event Event)
 
+var (
+	EmptyStoreNameErr = errors.New("Sorry, you must provide a valid store name.")
+	InvalidTlsConfigurationError = errors.New("Sorry, you have provided an invalid tls configuration.")
+)
 type EventStore interface {
 	Publish(topic string, message []byte) error
 	Subscribe(topic string, handler SubscriptionHandler) error
-	SetServiceName(name string)
 	GetServiceName() string
 }

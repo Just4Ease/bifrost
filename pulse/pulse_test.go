@@ -1,27 +1,26 @@
 package pulse
 
 import (
-	"github.com/roava/eventStore"
+	"github.com/roava/bifrost"
 	"testing"
 	"time"
 )
 
 var topic = "test-topic-xxx" // for random topic name.
-var store, _ = Init(eventStore.Options{
-	Address: "pulsar://localhost:6650",
+var store, _ = Init(bifrost.Options{
+	ServiceName: "test-service",
+	Address:     "pulsar://localhost:6650",
 })
 
 func TestStore_Publish(t *testing.T) {
-	store.SetServiceName("test-service")
 	if err := store.Publish(topic, []byte("Hello World!")); err != nil {
 		t.Errorf("Failed to publish data to event store topic %s. Failed with error: %v", topic, err)
 	}
 }
 
 func TestStore_Subscribe(t *testing.T) {
-	store.SetServiceName("test-service")
 	timer := time.AfterFunc(3*time.Second, func() {
-		if err := store.Subscribe(topic, func(event eventStore.Event) {
+		if err := store.Subscribe(topic, func(event bifrost.Event) {
 			data := event.Data()
 
 			eventTopic := event.Topic()

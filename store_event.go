@@ -1,4 +1,4 @@
-package eventStore
+package bifrost
 
 type Event interface {
 	Ack()
